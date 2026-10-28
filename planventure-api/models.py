@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from extensions import db
+from password_utils import check_password, hash_password
 
 
 def utc_now():
@@ -20,6 +21,17 @@ class User(db.Model):
         default=utc_now,
         onupdate=utc_now,
     )
+    trips = db.relationship(
+        "Trip",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    def set_password(self, password: str) -> None:
+        self.password_hash = hash_password(password)
+
+    def check_password(self, password: str) -> bool:
+        return check_password(password, self.password_hash)
 
     def __repr__(self):
         return f"<User {self.email}>"
@@ -52,8 +64,3 @@ class Trip(db.Model):
     )
 
     user = db.relationship("User", back_populates="trips")
-    trips = db.relationship(
-        "Trip",
-        back_populates="user",
-        cascade="all, delete-orphan",
-    )
