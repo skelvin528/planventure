@@ -1,16 +1,33 @@
+import os
+
+from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
+
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+    "DATABASE_URL", "sqlite:///planventure.db"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-@app.route('/')
+CORS(app, origins=os.getenv("CORS_ORIGINS", "http://localhost:3000"))
+
+db = SQLAlchemy(app)
+
+
+@app.route("/")
 def home():
     return jsonify({"message": "Welcome to PlanVenture API"})
 
-@app.route('/health')
+
+@app.route("/health")
 def health_check():
     return jsonify({"status": "healthy"})
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(debug=True)
