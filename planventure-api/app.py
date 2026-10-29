@@ -24,6 +24,9 @@ db.init_app(app)
 jwt = JWTManager(app)
 
 from models import User  # noqa: E402, F401
+from auth import auth_bp
+
+app.register_blueprint(auth_bp)
 
 
 @app.route("/")
