@@ -29,6 +29,21 @@ from auth import auth_bp
 app.register_blueprint(auth_bp)
 
 
+@jwt.unauthorized_loader
+def handle_missing_token(_error):
+    return jsonify({"error": "Authentication token is required"}), 401
+
+
+@jwt.invalid_token_loader
+def handle_invalid_token(_error):
+    return jsonify({"error": "Invalid authentication token"}), 401
+
+
+@jwt.expired_token_loader
+def handle_expired_token(_jwt_header, _jwt_payload):
+    return jsonify({"error": "Authentication token has expired"}), 401
+
+
 @app.route("/")
 def home():
     return jsonify({"message": "Welcome to PlanVenture API"})
