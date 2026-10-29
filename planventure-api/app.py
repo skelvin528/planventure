@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify
@@ -13,20 +14,35 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
 app.config["JWT_SECRET_KEY"] = os.getenv(
     "JWT_SECRET_KEY", "planventure-development-secret-key"
 )
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
     "DATABASE_URL", "sqlite:///planventure.db"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-CORS(app, origins=os.getenv("CORS_ORIGINS", "http://localhost:3000"))
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ORIGINS", "http://localhost:3000,http://localhost:5173"
+    ).split(",")
+    if origin.strip()
+]
+CORS(
+    app,
+    origins=cors_origins,
+    supports_credentials=True,
+    allow_headers=["Content-Type", "Authorization"],
+)
 
 db.init_app(app)
 jwt = JWTManager(app)
 
 from models import User  # noqa: E402, F401
 from auth import auth_bp
+from trip_routes import trips_bp
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(trips_bp)
 
 
 @jwt.unauthorized_loader
