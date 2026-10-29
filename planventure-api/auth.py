@@ -52,3 +52,33 @@ def register():
         ),
         201,
     )
+
+
+@auth_bp.route("/login", methods=["POST"])
+def login():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Request body must be JSON"}), 400
+
+    email = data.get("email")
+    password = data.get("password")
+
+    if not isinstance(email, str) or not isinstance(password, str):
+        return jsonify({"error": "Email and password are required"}), 400
+
+    email = email.strip().lower()
+    user = User.query.filter_by(email=email).first()
+
+    if user is None or not user.check_password(password):
+        return jsonify({"error": "Invalid email or password"}), 401
+
+    return (
+        jsonify(
+            {
+                "message": "Login successful",
+                "access_token": generate_access_token(user.id),
+                "user": {"id": user.id, "email": user.email},
+            }
+        ),
+        200,
+    )
